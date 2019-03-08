@@ -20,24 +20,44 @@ The Nginx configuration in this image is based on the guidelines given by the [W
 Example `docker-compose.yml`:
 
 ```yaml
-wordpress:
-  image: wordpress:fpm
-  links:
-    - db:mysql
-nginx:
-  image: raulr/nginx-wordpress
-  links:
-   - wordpress
-  volumes_from:
-   - wordpress
-  ports:
-   - "8080:80"
-  environment:
-    POST_MAX_SIZE: 128m
-db:
-  image: mariadb
-  environment:
-    MYSQL_ROOT_PASSWORD: example
+version: '3.1'
+
+services:
+
+  wordpress:
+    image: wordpress:5.1.0-php7.3-fpm
+    restart: always
+    ports:
+      - 9000:9000
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: example_dev
+      WORDPRESS_DB_PASSWORD: example
+      WORDPRESS_DB_NAME: example_dev
+    volumes:
+      - wp-data:/var/www/html
+  nginx:
+    image: raulr/nginx-wordpress
+    links:
+      - wordpress
+    ports:
+      - "80:80"
+    environment:
+      POST_MAX_SIZE: 128m
+    volumes:
+      - wp-data:/var/www/html
+  
+  db:
+    image: mariadb:10.3
+    restart: always
+    environment:
+      MYSQL_DATABASE: example_dev
+      MYSQL_USER: example_dev
+      MYSQL_PASSWORD: example
+      MYSQL_ROOT_PASSWORD: example
+
+volumes:
+  wp-data:
 ```
 
 Run `docker-compose up`, wait for it to initialize completely, and visit `http://localhost:8080` or `http://host-ip:8080`.
